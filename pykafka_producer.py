@@ -25,24 +25,24 @@ with topic.get_producer(partitioner=hash_partitioner, linger_ms = 200) as produc
             '10'  :[int(2e6), int(3e6), int(1e3)], # [2e6, 3e6): (active-user)
             '1000' :[int(3e6), int(4e6), int(1)]} # [3e6, 4e6): (machine-spam)
         dtime = 0.
-	    nv = 0 # Initiate the number of the visits to the website during the time window
-	    ld = []
-	    for v in visitg:
-	        nv += v*nvfv[str(v)][2]
-	        ld.append(np.repeat(np.random.randint(nvfv[str(v)][0], nvfv[str(v)][1], size=nvfv[str(v)][2]), v)) 
+        nv = 0 # Initiate the number of the visits to the website during the time window
+        ld = []
+        for v in visitg:
+            nv += v*nvfv[str(v)][2]
+            ld.append(np.repeat(np.random.randint(nvfv[str(v)][0], nvfv[str(v)][1], size=nvfv[str(v)][2]), v)) 
 
-	    ld1 = np.concatenate(ld[:])
-	    np.random.shuffle(ld1)
-	    dt = tw/len(ld1)
-	    eventTime = 0.
+        ld1 = np.concatenate(ld[:])
+        np.random.shuffle(ld1)
+        dt = tw/len(ld1)
+        eventTime = 0.
 
-	    for index, item in enumerate(ld1):
-	        eventTimeo = eventTime  
-	        eventTime  = dt*(index+np.random.random_sample()) # event time in Seconds
-	        time.sleep((eventTime-eventTimeo)) # sleep time in miliseconds
-	        currID = item
-	        outputStr = "%s;%s" % (currID, eventTime+dtime)
-	        producer.produce(outputStr, partition_key=str(currKey))
+        for index, item in enumerate(ld1):
+            eventTimeo = eventTime  
+            eventTime  = dt*(index+np.random.random_sample()) # event time in Seconds
+            time.sleep((eventTime-eventTimeo)) # sleep time in miliseconds
+            currID = item
+            outputStr = "%s;%s" % (currID, eventTime+dtime)
+            producer.produce(outputStr, partition_key=str(currKey))
         dtime += tw
         totallogs += len(ld1)
 
