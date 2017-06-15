@@ -11,11 +11,11 @@ hash_partitioner = HashingPartitioner()
 
 client   = KafkaClient("172.31.53.147:9092") # , socket_timeout_ms=1000
 topic    = client.topics["jtest3b"]
-producer = topic.get_producer(partitioner=hash_partitioner, linger_ms = 200)
+#producer = topic.get_producer(partitioner=hash_partitioner, linger_ms = 200)
 
 totallogs = 0
 times = time.time()
-with topic.get_producer(linger_ms = 200) as producer:
+with topic.get_producer(partitioner=hash_partitioner, linger_ms = 200) as producer:
 	while True:
         tw = 1*60. # The time window in seconds
         #visitg = [1,2,10,100]
@@ -23,7 +23,7 @@ with topic.get_producer(linger_ms = 200) as producer:
         nvfv = {'1'   :[0       , int(1e6), int(1e3)], # [0,   1e6): (forgetters)
             '2'   :[int(1e6), int(2e6), int(1e3)], # [1e6, 2e6): (login-logout) 
             '10'  :[int(2e6), int(3e6), int(1e3)], # [2e6, 3e6): (active-user)
-            '20' :[int(3e6), int(4e6), int(1)]} # [3e6, 4e6): (machine-spam)
+            '1000' :[int(3e6), int(4e6), int(1)]} # [3e6, 4e6): (machine-spam)
         dtime = 0.
 	    nv = 0 # Initiate the number of the visits to the website during the time window
 	    ld = []
