@@ -6,52 +6,45 @@ import numpy as np
 import time
 
 
-hashing_partitioner = HashingPartitioner()
+hash_partitioner = HashingPartitioner()
 
 
-client   = KafkaClient("localhost:9092") # , socket_timeout_ms=1000
-topic    = client.topics["jtest"]
-#producer = topic.get_producer(partitioner=hashing_partitioner, linger_ms = 200)
-producer = topic.get_producer()
+client   = KafkaClient("172.31.53.147:9092") # , socket_timeout_ms=1000
+topic    = client.topics["jtest3b"]
+producer = topic.get_producer(partitioner=hash_partitioner, linger_ms = 200)
 
-#times = time.time()
-#with topic.get_sync_producer() as producer:
-#	for i in range(8000):
-#		producer.produce('test message ' + str(i))
-#print time.time()-times
+totallogs = 0
 times = time.time()
-with topic.get_producer(linger_ms = 100) as producer:
-	for i in range(80000):
-		producer.produce('test message ' + str(i))
+with topic.get_producer(linger_ms = 200) as producer:
+	while True:
+        tw = 1*60. # The time window in seconds
+        #visitg = [1,2,10,100]
+        visitg = [1, 2, 10, 1000] 
+        nvfv = {'1'   :[0       , int(1e6), int(1e3)], # [0,   1e6): (forgetters)
+            '2'   :[int(1e6), int(2e6), int(1e3)], # [1e6, 2e6): (login-logout) 
+            '10'  :[int(2e6), int(3e6), int(1e3)], # [2e6, 3e6): (active-user)
+            '20' :[int(3e6), int(4e6), int(1)]} # [3e6, 4e6): (machine-spam)
+        dtime = 0.
+	    nv = 0 # Initiate the number of the visits to the website during the time window
+	    ld = []
+	    for v in visitg:
+	        nv += v*nvfv[str(v)][2]
+	        ld.append(np.repeat(np.random.randint(nvfv[str(v)][0], nvfv[str(v)][1], size=nvfv[str(v)][2]), v)) 
+
+	    ld1 = np.concatenate(ld[:])
+	    np.random.shuffle(ld1)
+	    dt = tw/len(ld1)
+	    eventTime = 0.
+
+	    for index, item in enumerate(ld1):
+	        eventTimeo = eventTime  
+	        eventTime  = dt*(index+np.random.random_sample()) # event time in Seconds
+	        time.sleep((eventTime-eventTimeo)) # sleep time in miliseconds
+	        currID = item
+	        outputStr = "%s;%s" % (currID, eventTime+dtime)
+	        producer.produce(outputStr, partition_key=str(currKey))
+        dtime += tw
+        totallogs += len(ld1)
+
 print time.time()-times
-"""
-     count = 0
-     while True:
-         count += 1
-         producer.produce('test msg', partition_key='{}'.format(count))
-         if count % 10 ** 5 == 0:  # adjust this or bring lots of RAM ;)
-             while True:
-                 try:
-                     msg, exc = producer.get_delivery_report(block=False)
-                     if exc is not None:
-                         print 'Failed to deliver msg {}: {}'.format(
-                             msg.partition_key, repr(exc))
-                     else:
-                         print 'Successfully delivered msg {}'.format(
-                         msg.partition_key)
-                 except Queue.Empty:
-                     break
 
-"""
-
-"""
-#ld1  = ["1;1", "1;2", "1;3", "1;4", "2;1", "2;1", "2;1", "3;1", "3;1"]
-ld1  = [[1,1], [1,2], [1,3], [1,4], [2,5], [2,7], [2,7.5], [3,8], [3,8.2]]
-for index, item in enumerate(ld1):
-	outputStr = "%s;%s" % (item[0], int(item[1]))
-	print (outputStr)
-	#producer.produce(outputStr, partition_key=str(item[0]))
-	producer.produce(outputStr)
-#outputStr = "%s;%s" % (currKey, int(currID))
-#producer.produce(outputStr, partition_key=str(currKey))
-"""
